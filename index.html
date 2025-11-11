@@ -8,66 +8,89 @@
         body { font-family: Arial, sans-serif; }
         .container { width: 50%; margin: 0 auto; text-align: center; padding: 20px; }
         button { margin-top: 20px; }
+        .section { margin-bottom: 30px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Votación para el Concurso "Quiteña Bonita" y "Quiteño Romántico"</h1>
-        <p>Por favor, elige a tu candidato favorito.</p>
+        <p>Por favor, elige a tu candidato favorito en ambas categorías.</p>
 
-        <form id="voteForm">
-            <label for="candidate1">Candidato 1: Juan</label><br>
-            <input type="radio" id="candidate1" name="candidate" value="Juan"><br>
-            <label for="candidate2">Candidato 2: María</label><br>
-            <input type="radio" id="candidate2" name="candidate" value="María"><br>
-            <label for="candidate3">Candidato 3: Pedro</label><br>
-            <input type="radio" id="candidate3" name="candidate" value="Pedro"><br>
-            <label for="candidate4">Candidato 4: Ana</label><br>
-            <input type="radio" id="candidate4" name="candidate" value="Ana"><br>
-            <label for="candidate5">Candidato 5: Luis</label><br>
-            <input type="radio" id="candidate5" name="candidate" value="Luis"><br>
+        <!-- Sección de votación para hombres -->
+        <div class="section">
+            <h3>Votación para Hombres</h3>
+            <form id="voteFormMen">
+                <label for="candidate1">Candidato 1: Juan</label><br>
+                <input type="radio" id="candidate1" name="candidate" value="Juan"><br>
+                <label for="candidate2">Candidato 2: Pedro</label><br>
+                <input type="radio" id="candidate2" name="candidate" value="Pedro"><br>
+                <label for="candidate3">Candidato 3: Luis</label><br>
+                <input type="radio" id="candidate3" name="candidate" value="Luis"><br>
+                <button type="button" onclick="submitVote('men')">Votar</button>
+            </form>
+        </div>
 
-            <button type="button" onclick="submitVote()">Votar</button>
-        </form>
+        <!-- Sección de votación para mujeres -->
+        <div class="section">
+            <h3>Votación para Mujeres</h3>
+            <form id="voteFormWomen">
+                <label for="candidate4">Candidata 1: María</label><br>
+                <input type="radio" id="candidate4" name="candidate" value="María"><br>
+                <label for="candidate5">Candidata 2: Ana</label><br>
+                <input type="radio" id="candidate5" name="candidate" value="Ana"><br>
+                <label for="candidate6">Candidata 3: Sofía</label><br>
+                <input type="radio" id="candidate6" name="candidate" value="Sofía"><br>
+                <button type="button" onclick="submitVote('women')">Votar</button>
+            </form>
+        </div>
 
-        <div id="results" style="display:none;">
-            <h3>Resultados</h3>
-            <p id="resultText"></p>
+        <div id="votersCount" style="display:none;">
+            <h3>Votantes Totales</h3>
+            <p id="totalVotersText"></p>
         </div>
     </div>
 
     <script>
-        let votes = { "Juan": 0, "María": 0, "Pedro": 0, "Ana": 0, "Luis": 0 };
+        let votesMen = { "Juan": 0, "Pedro": 0, "Luis": 0 };
+        let votesWomen = { "María": 0, "Ana": 0, "Sofía": 0 };
 
-        function submitVote() {
-            // Verificar si el usuario ya votó
-            if (localStorage.getItem("voted")) {
-                alert("Ya has votado. No puedes votar más de una vez.");
+        // Función para registrar el voto
+        function submitVote(gender) {
+            if (localStorage.getItem(gender + "Voted")) {
+                alert("Ya has votado en esta categoría. No puedes votar más de una vez.");
                 return;
             }
 
-            const form = document.getElementById("voteForm");
+            const form = document.getElementById("voteForm" + (gender === 'men' ? 'Men' : 'Women'));
             const selectedCandidate = form.querySelector('input[name="candidate"]:checked');
 
             if (selectedCandidate) {
-                votes[selectedCandidate.value] += 1;
-                localStorage.setItem("voted", true);  // Marcar que el usuario ha votado
-                displayResults();
+                if (gender === 'men') {
+                    votesMen[selectedCandidate.value] += 1;
+                } else {
+                    votesWomen[selectedCandidate.value] += 1;
+                }
+
+                // Almacenar que ya votó para esa categoría
+                localStorage.setItem(gender + "Voted", true);
+
+                updateVotersCount();
             } else {
                 alert("Por favor, selecciona un candidato.");
             }
         }
 
-        function displayResults() {
-            const resultText = document.getElementById("resultText");
-            resultText.innerHTML = `Resultados:<br>
-                                    Juan: ${votes["Juan"]} votos<br>
-                                    María: ${votes["María"]} votos<br>
-                                    Pedro: ${votes["Pedro"]} votos<br>
-                                    Ana: ${votes["Ana"]} votos<br>
-                                    Luis: ${votes["Luis"]} votos`;
-
-            document.getElementById("results").style.display = "block";
+        // Función para mostrar el total de votantes
+        function updateVotersCount() {
+            let totalVotes = 0;
+            for (let candidate in votesMen) {
+                totalVotes += votesMen[candidate];
+            }
+            for (let candidate in votesWomen) {
+                totalVotes += votesWomen[candidate];
+            }
+            document.getElementById("votersCount").style.display = "block";
+            document.getElementById("totalVotersText").innerHTML = `Total de votantes: ${totalVotes}`;
         }
     </script>
 </body>
