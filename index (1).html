@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votación para el Concurso</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 50%; margin: 0 auto; text-align: center; padding: 20px; }
+        button { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Votación para el Concurso "Quiteña Bonita" y "Quiteño Romántico"</h1>
+        <p>Por favor, elige a tu candidato favorito.</p>
+
+        <form id="voteForm">
+            <label for="candidate1">Candidato 1: Juan</label><br>
+            <input type="radio" id="candidate1" name="candidate" value="Juan"><br>
+            <label for="candidate2">Candidato 2: María</label><br>
+            <input type="radio" id="candidate2" name="candidate" value="María"><br>
+            <label for="candidate3">Candidato 3: Pedro</label><br>
+            <input type="radio" id="candidate3" name="candidate" value="Pedro"><br>
+            <label for="candidate4">Candidato 4: Ana</label><br>
+            <input type="radio" id="candidate4" name="candidate" value="Ana"><br>
+            <label for="candidate5">Candidato 5: Luis</label><br>
+            <input type="radio" id="candidate5" name="candidate" value="Luis"><br>
+
+            <button type="button" onclick="submitVote()">Votar</button>
+        </form>
+
+        <div id="results" style="display:none;">
+            <h3>Resultados</h3>
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <script>
+        let votes = { "Juan": 0, "María": 0, "Pedro": 0, "Ana": 0, "Luis": 0 };
+
+        function submitVote() {
+            // Verificar si el usuario ya votó
+            if (localStorage.getItem("voted")) {
+                alert("Ya has votado. No puedes votar más de una vez.");
+                return;
+            }
+
+            const form = document.getElementById("voteForm");
+            const selectedCandidate = form.querySelector('input[name="candidate"]:checked');
+
+            if (selectedCandidate) {
+                votes[selectedCandidate.value] += 1;
+                localStorage.setItem("voted", true);  // Marcar que el usuario ha votado
+                displayResults();
+            } else {
+                alert("Por favor, selecciona un candidato.");
+            }
+        }
+
+        function displayResults() {
+            const resultText = document.getElementById("resultText");
+            resultText.innerHTML = `Resultados:<br>
+                                    Juan: ${votes["Juan"]} votos<br>
+                                    María: ${votes["María"]} votos<br>
+                                    Pedro: ${votes["Pedro"]} votos<br>
+                                    Ana: ${votes["Ana"]} votos<br>
+                                    Luis: ${votes["Luis"]} votos`;
+
+            document.getElementById("results").style.display = "block";
+        }
+    </script>
+</body>
+</html>
