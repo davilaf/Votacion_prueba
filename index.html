@@ -9,6 +9,7 @@
         .container { width: 50%; margin: 0 auto; text-align: center; padding: 20px; }
         button { margin-top: 20px; }
         .section { margin-bottom: 30px; }
+        .pin-section { margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
@@ -16,36 +17,48 @@
         <h1>Votación para el Concurso "Quiteña Bonita" y "Quiteño Romántico"</h1>
         <p>Por favor, elige a tu candidato favorito en ambas categorías.</p>
 
-        <!-- Sección de votación para hombres -->
-        <div class="section">
-            <h3>Votación para Hombres</h3>
-            <form id="voteFormMen">
-                <label for="candidate1">Candidato 1: Juan</label><br>
-                <input type="radio" id="candidate1" name="candidate" value="Juan"><br>
-                <label for="candidate2">Candidato 2: Pedro</label><br>
-                <input type="radio" id="candidate2" name="candidate" value="Pedro"><br>
-                <label for="candidate3">Candidato 3: Luis</label><br>
-                <input type="radio" id="candidate3" name="candidate" value="Luis"><br>
-                <button type="button" onclick="submitVote('men')">Votar</button>
-            </form>
-        </div>
-
-        <!-- Sección de votación para mujeres -->
-        <div class="section">
+        <!-- Sección de votación para mujeres (primero) -->
+        <div class="section" id="womenSection">
             <h3>Votación para Mujeres</h3>
             <form id="voteFormWomen">
                 <label for="candidate4">Candidata 1: María</label><br>
-                <input type="radio" id="candidate4" name="candidate" value="María"><br>
+                <input type="radio" id="candidate4" name="candidateWomen" value="María"><br>
                 <label for="candidate5">Candidata 2: Ana</label><br>
-                <input type="radio" id="candidate5" name="candidate" value="Ana"><br>
+                <input type="radio" id="candidate5" name="candidateWomen" value="Ana"><br>
                 <label for="candidate6">Candidata 3: Sofía</label><br>
-                <input type="radio" id="candidate6" name="candidate" value="Sofía"><br>
-                <button type="button" onclick="submitVote('women')">Votar</button>
+                <input type="radio" id="candidate6" name="candidateWomen" value="Sofía"><br>
             </form>
         </div>
 
+        <!-- Sección de votación para hombres -->
+        <div class="section" id="menSection">
+            <h3>Votación para Hombres</h3>
+            <form id="voteFormMen">
+                <label for="candidate1">Candidato 1: Juan</label><br>
+                <input type="radio" id="candidate1" name="candidateMen" value="Juan"><br>
+                <label for="candidate2">Candidato 2: Pedro</label><br>
+                <input type="radio" id="candidate2" name="candidateMen" value="Pedro"><br>
+                <label for="candidate3">Candidato 3: Luis</label><br>
+                <input type="radio" id="candidate3" name="candidateMen" value="Luis"><br>
+            </form>
+        </div>
+
+        <!-- Botón de votar -->
+        <button id="voteButton" onclick="submitVote()" disabled>Votar</button>
+
+        <!-- Sección para ingresar el PIN -->
+        <div id="pinSection" class="pin-section">
+            <h3>Introduce el PIN para ver los resultados:</h3>
+            <input type="password" id="pinInput" maxlength="4">
+            <button onclick="checkPin()">Ver Resultados</button>
+            <p id="pinError" style="color: red; display: none;">PIN incorrecto, inténtalo de nuevo.</p>
+        </div>
+
+        <!-- Resultados -->
         <div id="votersCount" style="display:none;">
-            <h3>Votantes Totales</h3>
+            <h3>Resultados Finales:</h3>
+            <p id="resultsMen"></p>
+            <p id="resultsWomen"></p>
             <p id="totalVotersText"></p>
         </div>
     </div>
@@ -53,44 +66,73 @@
     <script>
         let votesMen = { "Juan": 0, "Pedro": 0, "Luis": 0 };
         let votesWomen = { "María": 0, "Ana": 0, "Sofía": 0 };
+        const correctPin = "1204";  // Establecer el PIN correcto
 
-        // Función para registrar el voto
-        function submitVote(gender) {
-            if (localStorage.getItem(gender + "Voted")) {
-                alert("Ya has votado en esta categoría. No puedes votar más de una vez.");
-                return;
-            }
+        // Función para habilitar el botón de votar solo si se ha seleccionado un candidato en ambas categorías
+        function enableVoteButton() {
+            const menVote = document.querySelector('input[name="candidateMen"]:checked');
+            const womenVote = document.querySelector('input[name="candidateWomen"]:checked');
+            const voteButton = document.getElementById("voteButton");
 
-            const form = document.getElementById("voteForm" + (gender === 'men' ? 'Men' : 'Women'));
-            const selectedCandidate = form.querySelector('input[name="candidate"]:checked');
-
-            if (selectedCandidate) {
-                if (gender === 'men') {
-                    votesMen[selectedCandidate.value] += 1;
-                } else {
-                    votesWomen[selectedCandidate.value] += 1;
-                }
-
-                // Almacenar que ya votó para esa categoría
-                localStorage.setItem(gender + "Voted", true);
-
-                updateVotersCount();
+            if (menVote && womenVote) {
+                voteButton.disabled = false;
             } else {
-                alert("Por favor, selecciona un candidato.");
+                voteButton.disabled = true;
             }
         }
 
-        // Función para mostrar el total de votantes
-        function updateVotersCount() {
-            let totalVotes = 0;
-            for (let candidate in votesMen) {
-                totalVotes += votesMen[candidate];
+        // Agregar eventos para verificar la selección de cada candidato
+        document.getElementById("voteFormMen").addEventListener("change", enableVoteButton);
+        document.getElementById("voteFormWomen").addEventListener("change", enableVoteButton);
+
+        // Función para registrar el voto
+        function submitVote() {
+            const menVote = document.querySelector('input[name="candidateMen"]:checked');
+            const womenVote = document.querySelector('input[name="candidateWomen"]:checked');
+
+            if (localStorage.getItem("voted")) {
+                alert("Ya has votado. No puedes votar más de una vez.");
+                return;
             }
-            for (let candidate in votesWomen) {
-                totalVotes += votesWomen[candidate];
+
+            // Registrar el voto para hombres
+            if (menVote) {
+                votesMen[menVote.value] += 1;
             }
-            document.getElementById("votersCount").style.display = "block";
-            document.getElementById("totalVotersText").innerHTML = `Total de votantes: ${totalVotes}`;
+
+            // Registrar el voto para mujeres
+            if (womenVote) {
+                votesWomen[womenVote.value] += 1;
+            }
+
+            // Almacenar que el usuario ha votado
+            localStorage.setItem("voted", true);
+
+            // Mostrar la sección para ingresar el PIN
+            document.querySelector("#pinSection").style.display = "block";
+        }
+
+        // Función para verificar el PIN y mostrar los resultados
+        function checkPin() {
+            const pinInput = document.getElementById("pinInput").value;
+            if (pinInput === correctPin) {
+                document.getElementById("votersCount").style.display = "block";
+                // Mostrar los resultados
+                document.getElementById("resultsMen").innerHTML = `Votación Hombres:<br>Juan: ${votesMen["Juan"]} votos<br>Pedro: ${votesMen["Pedro"]} votos<br>Luis: ${votesMen["Luis"]} votos`;
+                document.getElementById("resultsWomen").innerHTML = `Votación Mujeres:<br>María: ${votesWomen["María"]} votos<br>Ana: ${votesWomen["Ana"]} votos<br>Sofía: ${votesWomen["Sofía"]} votos`;
+
+                // Mostrar el total de votantes
+                let totalVotes = 0;
+                for (let candidate in votesMen) {
+                    totalVotes += votesMen[candidate];
+                }
+                for (let candidate in votesWomen) {
+                    totalVotes += votesWomen[candidate];
+                }
+                document.getElementById("totalVotersText").innerHTML = `Total de votantes: ${totalVotes}`;
+            } else {
+                document.getElementById("pinError").style.display = "block";  // Mostrar error si el PIN es incorrecto
+            }
         }
     </script>
 </body>
